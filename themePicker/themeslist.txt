@@ -1,0 +1,4 @@
+"colorful", "animated", "deep", "full", "light"
+
+"arc", "ellipse", "line", "point", "curve"
+
