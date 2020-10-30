@@ -1,12 +1,18 @@
+// falling letters - james kroner - fall 2020
+
+/** setup()
+ * The setup function is called once by p5.js to setup 
+ * our enviroment. In setup I create the canvas and an array of letters.
+ */
 function setup(){
+    // creating the canvas and defining some enviroment variables: 
     HEIGHT = 400;
     WIDTH = 400;
     createCanvas(HEIGHT, WIDTH);
     frameRate(30);
-    m = new LetterGrid(HEIGHT, WIDTH);
-    l = new Letter(200, 0, 'a', 0, true);
-    //t = new LetterTrail(l);
 
+    // creating the array of leader letters.  Each of these letters
+    // stores an array of followers!
     letterArr = new Array();
     for(let i = 0; i < 20; ++i){
         letterArr.push(
@@ -20,86 +26,66 @@ function setup(){
     }
 }
 
+/** draw()
+ * p5.js calls the draw function every frame!  If we want to 
+ * render something with motion we need to do it here.  I like
+ * to divide it into three stages:  Pre-render, render, and post-render.  
+ */
 function draw(){
+    // pre-render stage: get rid of whatever we drew last frame!
+    // the p5 way of doing this is to set the background color which erases everything.
     background(0);
-    stroke(0);
-    // m.render()
-    // t.render();
-    // c.translate(0,1);
+
+
+    // render stage: iterate through the letter array.  
+    // Render each letter and then translate each letter.  We 
+    // won't see the new translations until they are rendered 
+    // next frame.  Typically I include object translation in my
+    // post render stage but this keep the draw function at O(N^2)
+    // intead of O(2N^2).  In p5 we want to preserve every ounce of 
+    // performance we can!
     letterArr.forEach(currentLetter => {
         currentLetter.render();
         currentLetter.translate(0,1);
     })
+
+    // post-trender: draw the frame rate if we comment this part out!
+    renderFPS(false);
+}
+
+/** this is a helper funciton that renders the FPS */
+function renderFPS(b){
+    if(b){
+        let fps = frameRate();
+        stroke(255,0,0);
+        fill(255,000,000);
+        text("FPS: " + fps.toFixed(2), 30, height - 100);
+        stroke(000);
+        fill(000);
+    }
 }
 
 
-/** manage a grid of letters */
-class LetterGrid {
-    static gridStroke = '00ff2b';
-    static gridFill = 255;
-    static gridBackground = 0;
-    gridArr = new Array();
-    // generate a grid of letters
-
-    constructor(width, height){
-        for(let i = 0; i < 100; ++i ){
-            this.gridArr.push(new Letter(random(HEIGHT), random(WIDTH), 'a', 0));
-        }
-    }
-
-    // draw the grid and update each letters position 
-    render(){
-        this.gridArr.forEach(current => {
-            current.render(LetterGrid.gridFill);
-            current.translate(0,1);
-        });
-    }
-
-    // handle mouse over effects
-}
-
-class LetterTrail {
-
-    constructor(keyLetter){
-        this.keyLetter = keyLetter;
-        this.x = keyLetter.x;
-        this.y = keyLetter.y;
-        this.letterArr = new Array().push(keyLetter);
-        this.dt = 0;
-    }
-
-    render(){
-        this.keyLetter.render();
-        this.keyLetter.translate()
-    }
-
-    // move the key letter.  When the letter has moved an arbitrary construct a new letter whos Y positions is 10 pixels behind the previous letter. Add this letter to the array.
-    translate(){
-        this.letterArr.translate(0,1);
-        ++this.dt;
-
-    }
-    
-}
-
-/** manage individual letters **/
+/** manage individual letters! **/
 class Letter {
 
+    // the constructor is used whenever we create a new letter
     constructor(x, y, letter, isLeader){
-        this.x = x;
-        this.y = y;
-        this.speed = random() * 3;
-        this.letter = letter;
-        this.alpha;
-        this.tick = floor((random() * 10) - 1);
+        this.x = x; // set the x coordinate of this letter
+        this.y = y; // set the y coordinate of this letter
+        this.speed = random() * 3; // speed is a modifer on this letters translate function
+        this.letter = letter; // the letter that we will render
+        this.tick = floor((random() * 10) - 1); // tick used to track time in frames
         
-        this.duration = 3;
-        this.currentDuration = 0;
-        this.fill = 255;
+        this.duration = 3; // duration dications the fractional amount of fill we remove every lap
+        this.currentDuration = 0; // the current duration in laps
+        this.fill = 255; // fill is color inside the letter (as opposed to the border)
 
-        this.isLeader = isLeader;
-        this.followersAmount = 15;
-        this.followerList = new Array();
+        this.isLeader = isLeader; // tell the letter whether it's a leader or not
+        this.followersAmount = 15; // tell the letter how many followers to create
+        this.followerList = new Array(); // create the list of followers
+
+        // if this letter is a leader, add a list of new follower letters to the array.  Note that the new letters are NOT leaders!  Otherwise they would create their own list of followers...who would create their own list of followers...boom stack overflow!
         if(isLeader){
             for(let i = 1; i <= this.followersAmount; ++i){
                 this.followerList.push(
@@ -113,25 +99,29 @@ class Letter {
         }
     }
 
+
+    /** render() 
+     * render draws the colum to the canvas.
+    */
     render(){
+        // set the stroke the green because matrix :-)
+        stroke(0,255,0);
+
+        // the leader always gets this.fill with no modifiers
         if(this.isLeader){
             fill(this.fill);
             text(this.letter, this.x, this.y);
-            
-            // can we push a new letter onto the array? 
-            // if(this.followerList.length < 10){
-            //     this.followerList.push(new Letter(this.x, 0, 'a'));
-            // }
         } 
         
-
+        // loop through the array
         for(let i = 0; i < this.followersAmount; ++i){
             let currentFollower = this.followerList[i];
             if (currentFollower === undefined) continue;
-            fill(this.fill - (i * 15));
-            text(currentFollower.letter, this.x, this.y - (i * 12));
+            fill(this.fill - (i * 15)); // fill modifier
+            text(currentFollower.letter, this.x, this.y - (i * 12)); // actually render the text
             
-            if(random() * 100 > 90){
+            // 90% chance of changing to a new letter
+            if(random() * 100 > 95){
                 currentFollower.letter = String.fromCharCode(0x30a0 + Math.random() * (0x30ff - 0x30a0+1));
             }
         }
@@ -145,9 +135,8 @@ class Letter {
 
         // render the new letter
         this.letter = letter;
-        this.render(LetterGrid.gridFill);
+        this.render(this.fill);
     }
-
 
     // updates location 
     translate(dx, dy){
@@ -161,8 +150,8 @@ class Letter {
             currentFollower.y = (this.y + dy + this.speed);
         })
 
-        // handle the letter going off the bottom edge
-        if (this.y > 400){
+        // handle the letter going off the bottom edge, added 180 pixels so that the full column goes off the bottom
+        if (this.y > 580){
             this.y = 0;
             this.x = (random() * 400) + 1;
             ++this.currentDuration;
@@ -174,12 +163,5 @@ class Letter {
             this.switchLetter(String.fromCharCode(0x30a0 + Math.random() * (0x30ff - 0x30a0+1)));
             this.tick = 0;
         }
-
     }
-
-    fall(){
-        this.x += 1;
-        this.y = 0;
-    }
-
 }
