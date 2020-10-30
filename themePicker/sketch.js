@@ -10,8 +10,7 @@ function setup(){
     backgroundColor = color('#dec0de');
     counter = 0;
     creativeThemes = ["colorful", "animated", "deep", "full", "light"];
-    technicalThemes = ["arc", "ellipse", "line", "point", "curve"];
-
+    technicalThemes = ["arc", "ellipse", "line", "point", "curve", "rewind", "static", "broadcast", "synthesia", "algorithm"];
 }
 
 
@@ -19,6 +18,11 @@ function draw(){
     if(counter < 300){
         ++counter;
         background(backgroundColor);
+        for(let i = 0; i < 500; ++i){
+            stroke(255);
+            circle(random() * WIDTH, random() * HEIGHT, random() * 15);
+            point(random() * WIDTH, random() * HEIGHT);
+        }
         stroke(0);
         smooth();
         text('decode@uwm theme generator', 40, 50);
