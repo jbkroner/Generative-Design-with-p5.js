@@ -9,10 +9,9 @@ function setup(){
     frameRate(30);
     backgroundColor = color('#dec0de');
     counter = 0;
-    creativeThemes = ["colorful", "animated", "deep", "full", "light"];
-    technicalThemes = ["arc", "ellipse", "line", "point", "curve", "rewind", "static", "broadcast", "synthesia", "algorithm"];
+    creativeThemes = ["colorful", "animated", "deep", "full", "light","rewind", "static", "broadcast", "synthesia", "algorithm"];
+    technicalThemes = ["arc", "ellipse", "line", "point", "curve"];
 }
-
 
 function draw(){
     if(counter < 300){
