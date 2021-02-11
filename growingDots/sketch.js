@@ -20,16 +20,20 @@ function setup(){
 
 function draw(){
     angleMode(RADIANS);
-    background(0);
+    background(255);
     fill(255);
     stroke(255);
-
+    smooth();
+    
     dotArr.forEach(d => {
-        stroke(255);
+        stroke(0);
         fill(0);
         d.curX = cos(d.r) * d.m;
-        d.curY = sin(d.r) * d.m;
+        
+        // d.curY = sin(d.r) * d.m;
+        d.curY = 1;
         d.d = sin(d.r) * d.m / 3;
+        // d.d = tan(d.r);
         d.render(d.curX, d.curY, d.d);
         d.r += radMod;
     });
@@ -37,8 +41,8 @@ function draw(){
 
 class dot{
     constructor(){
-        this.x = floor(random(400));
-        this.y = floor(random(400));
+        this.x = floor(random(WIDTH - 100) + 50);
+        this.y = floor(random(HEIGHT - 100) + 50);
         this.curX = this.x;
         this.curY = this.y;
         this.d = random(2); //diameter

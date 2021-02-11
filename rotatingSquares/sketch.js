@@ -1,7 +1,13 @@
 
 function setup(){
-    createCanvas(400, 400);
+    HEIGHT = 400;
+    WIDTH = 400;
+    SIDE_LENGTH = floor(WIDTH / 8);
+    C_SIDE_LENGTH = sqrt(pow(SIDE_LENGTH, 2) * 2);
+    SIDE_LENGTH_DIV_2 = floor(SIDE_LENGTH/2);
+    createCanvas(HEIGHT, WIDTH);
     frameRate(30);
+    angleMode(DEGREES);
     // s = new Square(0, 0, width / 2, height / 2);
     m = new GridSquare();
 }
@@ -10,9 +16,14 @@ function setup(){
 
 function draw(){
     // pre-render
-    background(255);
+    if(m.squareArray[0].drawStatus == false) {
+        fill(0);
+        rect(0,0,WIDTH, HEIGHT);
+    } else {
+        fill(255);
+        rect(0,0,WIDTH, HEIGHT);
+    }
     // render stage
-    // s.render(true);
     m.render();
     // post render stage
 }
@@ -24,74 +35,79 @@ function draw(){
 // - pattern
 // - border / no border
 class Square {
-    constructor(x, y, dx, dy){
+    constructor(x, y, fill, tick, wait, drawStatus){
         // Our constructor hard codes the side length to be 1/8 of the width of our canvas.
         // This helps to enforce uniformity between squares. 
-        this.sideLength = width / 8; 
         this.x = x;
-        this.y = x;
-        this.dx = dx;
-        this.dy = dy;
-        this.rotateMultipler = 0;
+        this.y = y;
+        this.middleX = SIDE_LENGTH / 2;
+        this.middleY = SIDE_LENGTH / 2;
+        // this.cSideLength = sqrt(pow(SIDE_LENGTH, 2) * 2);
+        this.rotateMultipler = 45;
+        this.tick = tick;
+        this.wait = wait;
+        this.fill = fill;
+        this.drawStatus = drawStatus;
     }
 
     // draw the square
     render(border){
-        // pre-render 
-        stroke(123);
-        angleMode(RADIANS);
-        rectMode(RADIUS);
-        translate(this.dx, this.dy);
-        rotate(this.rotateMultipler);
-        this.rotateMultipler += 0.01;
+        // pre-render
 
+        // render
+        stroke(0);
+        fill(this.fill);
+        if(border) {
+            push();
+            translate(this.x + SIDE_LENGTH / 2, this.y + SIDE_LENGTH / 2);
+            rotate(this.rotateMultipler);
+            
+            // only rotate every 90 frames
+            if(!this.wait && this.tick != 90){
+                this.rotateMultipler += 1;
+            } else if(!this.wait && this.tick == 90){
+                this.wait = true; 
+                this.drawStatus = false;
+                this.tick = 0;
+            } else if(this.wait && this.tick == 90){
+                this.wait = false;
+                this.drawStatus = true;
+                this.tick = 0;
+            }
 
-        // render stage
-        if(border) rect(this.x, this.y, this.sideLength, this.sideLength);
-        // rotate(PI / 4);
-        fill(0);
-        rect(this.x, this.y, this.sideLength, this.sideLength / 1); // background
-
-        fill(255);
-        rect(this.x, this.y, this.sideLength, this.sideLength * .9);
-
-        fill(0);
-        rect(this.x, this.y, this.sideLength, this.sideLength * .8);
-        
-        fill(255);
-        rect(this.x, this.y, this.sideLength, this.sideLength * .7);
-
-        fill(0);
-        rect(this.x, this.y, this.sideLength, this.sideLength * .6);
-
-        fill(255);
-        rect(this.x, this.y, this.sideLength, this.sideLength * .5);
-
-        fill(0);
-        rect(this.x, this.y, this.sideLength, this.sideLength * .4); // background
-
-        fill(255);
-        rect(this.x, this.y, this.sideLength, this.sideLength * .3);
-
-        fill(0);
-        rect(this.x, this.y, this.sideLength, this.sideLength * .2);
-        
-        fill(255);
-        rect(this.x, this.y, this.sideLength, this.sideLength * .1);
-
+            translate(-this.x - SIDE_LENGTH_DIV_2, -this.y - SIDE_LENGTH_DIV_2);
+            //if(!this.wait){
+            if(this.drawStatus) rect(this.x, this.y, SIDE_LENGTH);
+            // } else {
+            // }
+            ++this.tick;
+            pop();
+        }
     }
 }
 
 class GridSquare {
-    squareArray = new Array();
     constructor(height, width){
+        this.squareArray = new Array();
+        this.tick = 0;
         this.populate();
     }
 
     populate(){
-        for(let i = 0; i < (width * height); i++){
-            this.squareArray.push(new Square(0,0,i,50));
+        for(let i = 0; i < WIDTH; i = i + C_SIDE_LENGTH){
+            for(let j = 0; j < HEIGHT; j = j + C_SIDE_LENGTH){
+                this.squareArray.push(new Square(floor(i),floor(j),255,0,false,true));
+                console.log(`(${floor(i)}, ${floor(j)})`);
+            }
         }
+        
+        for(let i = -C_SIDE_LENGTH / 2; i < WIDTH; i = i + C_SIDE_LENGTH){
+            for(let j = -C_SIDE_LENGTH / 2; j < HEIGHT; j = j + C_SIDE_LENGTH){
+                this.squareArray.push(new Square(floor(i),floor(j),0,0,true, false));
+                console.log(`generated new square @ (${floor(i)}, ${floor(j)})`);
+            }
+        }
+        this.squareArray.reverse();
     }
 
     render(){
